@@ -10,12 +10,12 @@ const DEFAULT_PLAYLIST_NAME = 'My List';
 const TARGET_KEY = 'music-quick-add-target';
 
 /**
- * One-click "add this song to my playlist".
+ * "Add this song to my playlist" from anywhere in the application.
  *
- * <p>Picking a playlist from a menu on every add is tedious when a listener is really just
- * saving tracks to one list. This service keeps a target playlist — chosen once, then
- * remembered — so adding a song is a single click anywhere in the application. If no
- * playlist exists yet, the first click creates one.
+ * <p>With a single playlist, adding is one click. With several, the click opens a picker
+ * so the listener chooses where the song goes; the choice becomes the target playlist
+ * whose contents the saved markers reflect. If no playlist exists yet, the first click
+ * creates one.
  */
 @Injectable({ providedIn: 'root' })
 export class QuickAddService {
@@ -33,7 +33,11 @@ export class QuickAddService {
   /** Track ids currently being saved, so a button can show progress. */
   private readonly _pending = signal<ReadonlySet<string>>(new Set());
 
+  /** Track waiting for the listener to pick a playlist, when there is more than one. */
+  private readonly _pickerTrack = signal<Track | null>(null);
+
   readonly notice = this._notice.asReadonly();
+  readonly pickerTrack = this._pickerTrack.asReadonly();
 
   /** The playlist one-click adds go into, when it still exists. */
   readonly target = computed(() => {
@@ -81,14 +85,19 @@ export class QuickAddService {
   }
 
   /**
-   * Adds a track to the target playlist in one step.
+   * Adds a track to a playlist.
    *
-   * <p>Resolves the target first: the remembered playlist if it still exists, otherwise
-   * the most recent one, otherwise a newly created default. That is what allows the very
-   * first click to succeed without any setup.
+   * <p>With several playlists the listener is asked which one, through the picker. With
+   * one it is used directly, and with none a default is created, so the very first click
+   * succeeds without any setup.
    */
   add(track: Track): void {
     if (this.isPending(track.id)) {
+      return;
+    }
+
+    if (this.playlistService.playlists().length > 1) {
+      this._pickerTrack.set(track);
       return;
     }
 
@@ -135,6 +144,68 @@ export class QuickAddService {
     this.add(track);
   }
 
+  /**
+   * Saves the waiting track into the playlist picked from the picker.
+   *
+   * <p>The pick becomes the new target, so the saved markers switch to that playlist's
+   * contents once the save lands.
+   */
+  chooseForPicker(playlistId: number): void {
+    const track = this._pickerTrack();
+    const playlist = this.playlistService.playlists().find((candidate) => candidate.id === playlistId);
+    this._pickerTrack.set(null);
+    if (!track || !playlist) {
+      return;
+    }
+
+    if (playlist.id !== this._targetId()) {
+      this.setTarget(playlist.id);
+      this._added.set(new Set());
+    }
+    this.save(playlist.id, playlist.name, track, () => this.loadAdded(playlist.id));
+  }
+
+  /** Creates a playlist from the picker and saves the waiting track into it. */
+  createForPicker(name: string): void {
+    const track = this._pickerTrack();
+    const trimmed = name.trim();
+    if (!track || !trimmed) {
+      return;
+    }
+
+    this._pickerTrack.set(null);
+    this.markPending(track.id, true);
+    this.playlistService.create(trimmed).subscribe({
+      next: (created) => {
+        this.setTarget(created.id);
+        this._added.set(new Set());
+        this.markPending(track.id, false);
+        this.save(created.id, created.name, track);
+      },
+      error: () => {
+        this.markPending(track.id, false);
+        this.flash('Could not create a playlist.');
+      },
+    });
+  }
+
+  /** Closes the picker without saving. */
+  cancelPicker(): void {
+    this._pickerTrack.set(null);
+  }
+
+  /** Replaces the saved markers with what the playlist holds on the server. */
+  private loadAdded(playlistId: number): void {
+    this.playlistService.getPlaylist(playlistId).subscribe({
+      next: (full) => {
+        if (this._targetId() === playlistId) {
+          this._added.set(new Set((full.songs ?? []).map((song) => song.trackId)));
+        }
+      },
+      error: () => undefined,
+    });
+  }
+
   /** Removes a track from the target playlist. */
   private remove(playlistId: number, playlistName: string, track: Track): void {
     this.markPending(track.id, true);
@@ -154,7 +225,7 @@ export class QuickAddService {
     });
   }
 
-  private save(playlistId: number, playlistName: string, track: Track): void {
+  private save(playlistId: number, playlistName: string, track: Track, onSaved?: () => void): void {
     this.markPending(track.id, true);
 
     this.playlistService.addSong(playlistId, track).subscribe({
@@ -162,6 +233,7 @@ export class QuickAddService {
         this.markPending(track.id, false);
         this._added.set(new Set([...this._added(), track.id]));
         this.flash(`Saved to ${playlistName}`);
+        onSaved?.();
       },
       error: (error: { status?: number }) => {
         this.markPending(track.id, false);
@@ -169,6 +241,7 @@ export class QuickAddService {
         if (error?.status === 409) {
           this._added.set(new Set([...this._added(), track.id]));
           this.flash(`Already in ${playlistName}`);
+          onSaved?.();
           return;
         }
         this.flash('Could not save the song.');

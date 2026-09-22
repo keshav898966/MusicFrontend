@@ -107,6 +107,29 @@ import { formatDuration } from '../../core/utils/format';
       .track:focus-visible .handle {
         transform: translateY(-50%) scale(1);
       }
+
+      /* Touch screens: a taller hit area and an always-visible handle make seeking
+         possible with a thumb. */
+      @media (hover: none) {
+        .track {
+          padding: 14px 0;
+        }
+
+        .rail {
+          height: 6px;
+        }
+
+        .handle {
+          width: 18px;
+          height: 18px;
+          margin-left: -9px;
+          transform: translateY(-50%) scale(1);
+        }
+
+        .time {
+          font-size: 0.8125rem;
+        }
+      }
     `,
   ],
 })

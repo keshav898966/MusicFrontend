@@ -64,7 +64,7 @@
    the browser reports no inset. */
 @media (max-width: 900px) {
   :root {
-    --player-safe-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+    --player-safe-bottom: max(32px, env(safe-area-inset-bottom, 0px));
   }
 }
 

@@ -597,6 +597,57 @@ import { VolumeControlComponent } from './volume-control.component';
         app-volume-control {
           display: none; /* volume is handled by the device on mobile */
         }
+
+        /* Phone controls are sized and spaced for one thumb, e.g. while driving: large
+           targets spread across the width, so a tap cannot land on the wrong button. */
+        .center {
+          gap: 8px;
+          padding-bottom: 10px;
+        }
+
+        .controls {
+          width: 100%;
+          max-width: 380px;
+          justify-content: space-between;
+        }
+
+        .controls .btn-icon {
+          width: 52px;
+          height: 52px;
+        }
+
+        .controls .btn-icon svg {
+          width: 24px;
+          height: 24px;
+        }
+
+        .play-pause {
+          width: 66px;
+          height: 66px;
+          margin: 0;
+        }
+
+        .play-pause svg {
+          width: 30px;
+          height: 30px;
+        }
+
+        .play-pause .spinner {
+          width: 26px;
+          height: 26px;
+        }
+
+        .now-playing .save,
+        .right .btn-icon {
+          width: 46px;
+          height: 46px;
+        }
+
+        .now-playing .save svg,
+        .right .btn-icon svg {
+          width: 22px;
+          height: 22px;
+        }
       }
     `,
   ],

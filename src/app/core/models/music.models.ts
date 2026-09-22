@@ -105,6 +105,8 @@ export interface PlaylistSong {
   artistId: string | null;
   artworkUrl: string | null;
   duration: number | null;
+  /** YouTube video id or iTunes clip URL; null for Audius tracks. */
+  previewUrl: string | null;
   position: number;
   addedAt: string;
 }
@@ -137,8 +139,20 @@ export interface PlayerState {
   error: string | null;
 }
 
-/** Converts a song stored in a local playlist back into a playable track. */
+/**
+ * Converts a song stored in a local playlist back into a playable track.
+ *
+ * <p>The source is recovered from the id prefix the backend gives YouTube ("yt:") and
+ * iTunes ("itunes:") tracks; everything else is an Audius track.
+ */
 export function playlistSongToTrack(song: PlaylistSong): Track {
+  const isYoutube = song.trackId.startsWith('yt:');
+  const isItunes = song.trackId.startsWith('itunes:');
+  const source: Track['source'] = isYoutube ? 'YOUTUBE' : isItunes ? 'ITUNES' : 'AUDIUS';
+
+  // A YouTube track plays by its video id, which is also the tail of its track id.
+  const previewUrl = isYoutube ? (song.previewUrl ?? song.trackId.slice(3)) : (song.previewUrl ?? null);
+
   return {
     id: song.trackId,
     title: song.title,
@@ -157,9 +171,8 @@ export function playlistSongToTrack(song: PlaylistSong): Track {
     repostCount: 0,
     streamable: true,
     permalink: null,
-    // Saved songs resolve through the normal Audius path; a preview clip is never stored.
-    source: 'AUDIUS',
-    previewOnly: false,
-    previewUrl: null,
+    source,
+    previewOnly: isItunes,
+    previewUrl,
   };
 }

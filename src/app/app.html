@@ -16,6 +16,9 @@
 
 <app-music-player />
 
+<!-- Asks which playlist to save into, when there is more than one. -->
+<app-playlist-picker />
+
 @if (quickAdd.notice(); as message) {
   <div class="toast" role="status" aria-live="polite">{{ message }}</div>
 }

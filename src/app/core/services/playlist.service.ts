@@ -67,19 +67,21 @@ export class PlaylistService {
    */
   addSong(playlistId: number, track: Track): Observable<LocalPlaylist> {
     return this.http
-      .post<LocalPlaylist>(`${this.baseUrl}/${playlistId}/songs/${track.id}`, {
+      .post<LocalPlaylist>(`${this.baseUrl}/${playlistId}/songs/${encodeURIComponent(track.id)}`, {
         title: track.title,
         artistName: track.artistName,
         artistId: track.artistId,
         artworkUrl: track.artworkUrl,
         duration: track.duration,
+        // What a YouTube or iTunes track needs to be played again from the playlist.
+        previewUrl: track.source === 'AUDIUS' ? null : track.previewUrl,
       })
       .pipe(tap((updated) => this.replaceInCache(updated)));
   }
 
   removeSong(playlistId: number, trackId: string): Observable<LocalPlaylist> {
     return this.http
-      .delete<LocalPlaylist>(`${this.baseUrl}/${playlistId}/songs/${trackId}`)
+      .delete<LocalPlaylist>(`${this.baseUrl}/${playlistId}/songs/${encodeURIComponent(trackId)}`)
       .pipe(tap((updated) => this.replaceInCache(updated)));
   }
 

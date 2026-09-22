@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { MediaSessionService } from './core/services/media-session.service';
 import { PlayerService } from './core/services/player.service';
 import { PlaylistService } from './core/services/playlist.service';
 import { QuickAddService } from './core/services/quick-add.service';
 import { MusicPlayerComponent } from './shared/components/music-player.component';
 import { NavbarComponent } from './shared/components/navbar.component';
+import { PlaylistPickerComponent } from './shared/components/playlist-picker.component';
 import { SidebarComponent } from './shared/components/sidebar.component';
 
 /**
@@ -17,13 +19,16 @@ import { SidebarComponent } from './shared/components/sidebar.component';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, NavbarComponent, SidebarComponent, MusicPlayerComponent],
+  imports: [RouterOutlet, NavbarComponent, SidebarComponent, MusicPlayerComponent, PlaylistPickerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App implements OnInit {
   private readonly playlistService = inject(PlaylistService);
   private readonly player = inject(PlayerService);
+
+  /** Created here, once, so lock-screen controls work from the first track played. */
+  private readonly mediaSession = inject(MediaSessionService);
 
   /** Drives the save-confirmation toast. */
   readonly quickAdd = inject(QuickAddService);

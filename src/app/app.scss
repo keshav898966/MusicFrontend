@@ -85,3 +85,15 @@
     transform: translateX(-50%) translateY(10px);
   }
 }
+
+/* Phones get the larger thumb-sized player, so reserve correspondingly more room.
+   Kept last so it overrides the base rules above. */
+@media (max-width: 560px) {
+  .content.with-player {
+    padding-bottom: calc(var(--player-height) + var(--player-safe-bottom) + 130px);
+  }
+
+  .toast {
+    bottom: calc(var(--player-height) + var(--player-safe-bottom) + 110px);
+  }
+}
