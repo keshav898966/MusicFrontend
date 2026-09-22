@@ -38,6 +38,8 @@
   /* Layout metrics, referenced by the shell and the player. */
   --sidebar-width: 248px;
   --player-height: 92px;
+  /* Space kept below the player for the phone's home indicator / gesture bar. */
+  --player-safe-bottom: env(safe-area-inset-bottom, 0px);
   --navbar-height: 64px;
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -56,6 +58,14 @@
     sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 
   color-scheme: dark;
+}
+
+/* On touch screens the seek bar must sit clear of the swipe-up gesture area, even when
+   the browser reports no inset. */
+@media (max-width: 900px) {
+  :root {
+    --player-safe-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  }
 }
 
 *,

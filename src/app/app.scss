@@ -29,7 +29,7 @@
 
 /* Reserve room for the player bar so the last row is never hidden behind it. */
 .content.with-player {
-  padding-bottom: calc(var(--player-height) + 32px);
+  padding-bottom: calc(var(--player-height) + var(--player-safe-bottom) + 32px);
 }
 
 .backdrop {
@@ -51,7 +51,7 @@
 
   .content.with-player {
     /* The player bar grows taller on small screens, so reserve more room. */
-    padding-bottom: calc(var(--player-height) + 78px);
+    padding-bottom: calc(var(--player-height) + var(--player-safe-bottom) + 78px);
   }
 }
 
@@ -65,7 +65,7 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--player-height) + 22px);
+  bottom: calc(var(--player-height) + var(--player-safe-bottom) + 22px);
   z-index: 80;
   transform: translateX(-50%);
   padding: 11px 20px;

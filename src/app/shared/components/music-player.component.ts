@@ -249,6 +249,7 @@ import { VolumeControlComponent } from './volume-control.component';
         right: 0;
         bottom: 0;
         z-index: 50;
+        padding-bottom: var(--player-safe-bottom);
         background: rgba(16, 16, 25, 0.94);
         backdrop-filter: blur(18px);
         border-top: 1px solid var(--border);
@@ -546,7 +547,7 @@ import { VolumeControlComponent } from './volume-control.component';
         position: fixed;
         top: 0;
         right: 0;
-        bottom: var(--player-height);
+        bottom: calc(var(--player-height) + var(--player-safe-bottom));
         z-index: 61;
         animation: slide 200ms cubic-bezier(0.4, 0, 0.2, 1);
       }
