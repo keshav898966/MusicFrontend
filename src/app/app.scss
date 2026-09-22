@@ -1,0 +1,87 @@
+/* App shell layout: a fixed sidebar beside a scrolling content column. */
+
+:host {
+  display: block;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.shell {
+  display: flex;
+  height: 100%;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+/* Only this region scrolls, which keeps the navbar and player fixed. */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 28px 32px;
+}
+
+/* Reserve room for the player bar so the last row is never hidden behind it. */
+.content.with-player {
+  padding-bottom: calc(var(--player-height) + 32px);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: rgba(0, 0, 0, 0.55);
+  animation: fade 160ms ease;
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@media (max-width: 900px) {
+  .content {
+    padding: 18px 16px 28px;
+  }
+
+  .content.with-player {
+    /* The player bar grows taller on small screens, so reserve more room. */
+    padding-bottom: calc(var(--player-height) + 78px);
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 14px 12px 24px;
+  }
+}
+
+/* Transient confirmation shown after a one-click save. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--player-height) + 22px);
+  z-index: 80;
+  transform: translateX(-50%);
+  padding: 11px 20px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: toast-in 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+}

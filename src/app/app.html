@@ -1,0 +1,21 @@
+<div class="shell">
+  <app-sidebar [open]="menuOpen()" (navigate)="closeMenu()" />
+
+  @if (menuOpen()) {
+    <div class="backdrop" (click)="closeMenu()" aria-hidden="true"></div>
+  }
+
+  <div class="main">
+    <app-navbar (toggleMenu)="toggleMenu()" />
+
+    <main class="content" [class.with-player]="playerVisible()">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<app-music-player />
+
+@if (quickAdd.notice(); as message) {
+  <div class="toast" role="status" aria-live="polite">{{ message }}</div>
+}
