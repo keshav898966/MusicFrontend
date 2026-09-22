@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npx ng build --configuration production,vercel",
+  "outputDirectory": "dist/musicFrontend/browser",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
