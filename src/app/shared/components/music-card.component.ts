@@ -20,7 +20,9 @@ import { formatCount, formatDuration } from '../../core/utils/format';
   imports: [ImageFallbackDirective, RouterLink],
   template: `
     <article class="card" [class.playing]="isCurrent()" (pointerenter)="onHover()" (focusin)="onHover()">
-      <div class="art">
+      <!-- The whole artwork is a play target: on touch screens the small button alone is
+           too easy to miss. The buttons on top stop propagation, so they are unaffected. -->
+      <div class="art" (click)="onPlay($event)">
         @if (track().artworkUrl) {
           <img [src]="track().artworkUrl" [alt]="" loading="lazy" decoding="async" appImageFallback />
         } @else {
@@ -91,9 +93,16 @@ import { formatCount, formatDuration } from '../../core/utils/format';
       </div>
 
       <div class="meta">
-        <a class="title truncate" [routerLink]="['/track', track().id]" [title]="track().title">
-          {{ track().title }}
-        </a>
+        <!-- Only Audius tracks have a detail page; for the others the title plays instead. -->
+        @if (hasDetailPage()) {
+          <a class="title truncate" [routerLink]="['/track', track().id]" [title]="track().title">
+            {{ track().title }}
+          </a>
+        } @else {
+          <button type="button" class="title truncate" [title]="track().title" (click)="onPlay($event)">
+            {{ track().title }}
+          </button>
+        }
 
         @if (track().artistId) {
           <a class="artist truncate" [routerLink]="['/artist', track().artistId]">
@@ -142,6 +151,7 @@ import { formatCount, formatDuration } from '../../core/utils/format';
         border-radius: var(--radius-md);
         overflow: hidden;
         background: var(--bg-sunken);
+        cursor: pointer;
       }
 
       .art img {
@@ -313,6 +323,12 @@ import { formatCount, formatDuration } from '../../core/utils/format';
         color: var(--text-primary);
       }
 
+      button.title {
+        display: block;
+        max-width: 100%;
+        text-align: left;
+      }
+
       .title:hover {
         color: var(--accent-bright);
       }
@@ -337,17 +353,20 @@ import { formatCount, formatDuration } from '../../core/utils/format';
         color: var(--text-muted);
       }
 
+      /* Touch devices have no hover, so the controls stay visible at any width. */
+      @media (hover: none) {
+        .play,
+        .queue,
+        .save {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
       @media (max-width: 480px) {
         .card {
           padding: 8px;
           gap: 8px;
-        }
-
-        /* Touch devices have no hover, so the controls stay visible. */
-        .play,
-        .queue {
-          opacity: 1;
-          transform: none;
         }
 
         .play {
@@ -376,6 +395,9 @@ export class MusicCardComponent {
 
   readonly duration = computed(() => formatDuration(this.track().duration));
   readonly plays = computed(() => formatCount(this.track().playCount));
+
+  /** Only Audius tracks can be looked up by id, so only they get a track page. */
+  readonly hasDetailPage = computed(() => this.track().source === 'AUDIUS');
 
   /** True once the track has been saved to the playlist this session. */
   readonly isSaved = computed(() => this.quickAdd.isAdded(this.track().id));

@@ -19,7 +19,13 @@ import { formatDuration } from '../../core/utils/format';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ImageFallbackDirective, RouterLink],
   template: `
-    <div class="row" [class.playing]="isCurrent()" (pointerenter)="onHover()" (focusin)="onHover()">
+    <div
+      class="row"
+      [class.playing]="isCurrent()"
+      (pointerenter)="onHover()"
+      (focusin)="onHover()"
+      (click)="onRowClick($event)"
+    >
       <div class="index">
         @if (isCurrentlyPlaying()) {
           <span class="bars" aria-label="Now playing">
@@ -58,7 +64,12 @@ import { formatDuration } from '../../core/utils/format';
 
       <div class="info">
         <span class="title-line">
-          <a class="title truncate" [routerLink]="['/track', track().id]">{{ track().title }}</a>
+          <!-- Only Audius tracks have a detail page; for the others the title plays instead. -->
+          @if (hasDetailPage()) {
+            <a class="title truncate" [routerLink]="['/track', track().id]">{{ track().title }}</a>
+          } @else {
+            <button type="button" class="title truncate" (click)="onPlay()">{{ track().title }}</button>
+          }
           @if (track().previewOnly) {
             <span class="preview-tag" title="Apple Music preview — about 30 seconds">preview</span>
           }
@@ -134,6 +145,7 @@ import { formatDuration } from '../../core/utils/format';
         gap: 14px;
         padding: 8px 12px;
         border-radius: var(--radius-md);
+        cursor: pointer;
         transition: background var(--transition-fast);
       }
 
@@ -238,6 +250,11 @@ import { formatDuration } from '../../core/utils/format';
         font-weight: 500;
         color: var(--text-primary);
         font-size: 0.9375rem;
+      }
+
+      button.title {
+        max-width: 100%;
+        text-align: left;
       }
 
       .title:hover {
@@ -364,6 +381,9 @@ export class TrackRowComponent {
   readonly isCurrent = computed(() => this.player.currentTrack()?.id === this.track().id);
   readonly isCurrentlyPlaying = computed(() => this.isCurrent() && this.player.isPlaying());
 
+  /** Only Audius tracks can be looked up by id, so only they get a track page. */
+  readonly hasDetailPage = computed(() => this.track().source === 'AUDIUS');
+
   /** True once the track has been saved to the playlist this session. */
   readonly isSaved = computed(() => this.quickAdd.isAdded(this.track().id));
 
@@ -376,6 +396,17 @@ export class TrackRowComponent {
       return;
     }
     this.player.play(this.track(), this.queue());
+  }
+
+  /**
+   * Tapping anywhere on the row plays it. On phones the play button column is hidden,
+   * so this is the only way to start a track there. Links and buttons keep their own action.
+   */
+  onRowClick(event: MouseEvent): void {
+    if ((event.target as HTMLElement).closest('a, button')) {
+      return;
+    }
+    this.onPlay();
   }
 
   onAddToQueue(): void {
